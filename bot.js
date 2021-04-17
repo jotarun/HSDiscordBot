@@ -107,7 +107,7 @@ function outputcards(cards, message) {
                     .setColor('#0099ff')
                     .setTitle(card.name)
                     .setDescription(flavor)
-                    .setThumbnail(card.img);
+                    .setImage(card.img);
                 message.channel.send(cardEmbed);
             }
             catch (e) {
