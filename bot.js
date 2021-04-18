@@ -154,13 +154,14 @@ client.on('message', message => {
        
             deck.sort((a,b)=>a.cost-b.cost);
             
-            let neutrals = deck.filter(card=>card.cardClass=="NEUTRAL");
+            let neutrals = deck.filter(card=> (card.cardClass=="NEUTRAL" && card.hasOwnProperty('multiClassGroup')== false) );
             let neutralsouput ="";
             neutrals.forEach(card=>{
              neutralsouput += card.count + ' × ('+ card.cost+')**' +card.name + "**\n";
             });
        
-            let classes = deck.filter(card=>card.cardClass!="NEUTRAL");
+            let classes = deck.filter( card=> ( neutrals.indexOf( card ) < 0) );
+               
             let classesouput ="";
             classes.forEach(card=>{
              classesouput += card.count + ' × ('+ card.cost+')**' +card.name + "**\n";
