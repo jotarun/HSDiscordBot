@@ -165,13 +165,16 @@ client.on('message', message => {
             classes.forEach(card=>{
              classesouput += card.count + ' × ('+ card.cost+')**' +card.name + "**\n";
             });
+            if (neutralsouput.length>0)
             cardEmbed.addField("中立", neutralsouput, true);
+            if (classesouput.length>0)
             cardEmbed.addField("職業", classesouput, true);
            
             message.channel.send(cardEmbed);
 
         }
         catch (e) {
+            console.log(e);
             return message.reply(`牌組代碼有誤！`);
         }
 
