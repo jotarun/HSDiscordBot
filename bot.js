@@ -185,14 +185,15 @@ async function getcard(id){
                     if (card.battlegrounds.hero)
                     {
                         let heropower = await getcard(card.childIds[0]);
-                        cardEmbed.setThumbnail(heropower.image);
+                      
                         let heropowertext= heropower.text.replace(/<b>/g, "**").replace(/<\/b>/g, "**").replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
                         cardEmbed.setDescription(heropowertext);
+                        cardEmbed.setThumbnail(heropower.image);
                     }
                 } else {
                     cardEmbed.setImage(card.image);
                 }
-                message.channel.send(cardEmbed);
+                await message.channel.send(cardEmbed);
             }
             catch (e) {
                 console.log(e);
@@ -207,7 +208,18 @@ client.on('message', async message => {
     const parsed = parser.parse(message, prefix);
     if (!parsed.success) return;
 
-    if (parsed.command === "card") {
+    if (parsed.command === "hshelp") {
+        const cardEmbed = new Discord.MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('機器人指令一覽 ')
+            .addField('!card 關鍵字 查構築模式卡片 可只輸入部分名稱', '例如: !card 油切')
+            .addField('!bgcard 關鍵字 查英雄戰場卡片 可只輸入部分名稱', '例如: !card 油切')
+            .addField('!deck 牌組代碼', '例如: !deck AAAA');
+
+        message.channel.send(cardEmbed);
+
+    }
+    else if (parsed.command === "card") {
         let text = parsed.arguments[0];
 
         let resp = await hsClient.cardSearch({
@@ -224,17 +236,7 @@ client.on('message', async message => {
         outputcards2(cards,message);
     }
     
-    else if (parsed.command === "hshelp") {
-        const cardEmbed = new Discord.MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle('機器人指令一覽 ')
-            .addField('!card 關鍵字 查構築模式卡片 可只輸入部分名稱', '例如: !card 油切')
-            .addField('!bgcard 關鍵字 查英雄戰場卡片 可只輸入部分名稱', '例如: !card 油切')
-            .addField('!deck 牌組代碼', '例如: !deck AAAA');
-
-        message.channel.send(cardEmbed);
-
-    }
+    
     else if (parsed.command === "bgcard") {
         let text = parsed.arguments[0];
 
@@ -245,7 +247,22 @@ client.on('message', async message => {
             locale: 'zh_TW'
         });
         cards = resp.data.cards;
+        cards = cards.filter(card => card.name.includes(text));
         outputcards2(cards,message,true);
+
+    }
+    else if (parsed.command === "duelcard") {
+        let text = parsed.arguments[0];
+
+        let resp = await hsClient.cardSearch({
+            gameMode: 'duels',
+            textFilter: text,
+            origin: 'tw',
+            locale: 'zh_TW'
+        });
+        cards = resp.data.cards;
+        cards = cards.filter(card => card.name.includes(text));
+        outputcards2(cards,message);
 
     }
     else if (parsed.command === "deck") {
