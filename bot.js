@@ -150,7 +150,74 @@ async function getcard(id) {
     });
     return resp.data;
 }
-function outputcards2(cards, message, isbg = false) {
+
+async function outputcard(card,message,isbg=false){
+    try {
+        flavor = ""
+
+        const cardEmbed = new Discord.MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle(card.name)
+            .setURL(`https://playhearthstone.com/zh-tw/cards/${card.slug}`);
+
+        if (card.flavorText) {
+            flavor = card.flavorText.replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
+            cardEmbed.setDescription(flavor);
+        }
+        if (isbg) {
+            cardEmbed.setImage(card.battlegrounds.image);
+
+            if (card.battlegrounds.hero) {
+                let heropower = await getcard(card.childIds[0]);
+
+                let heropowertext = heropower.text.replace(/<b>/g, "**").replace(/<\/b>/g, "**").replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
+                cardEmbed.setDescription(heropowertext);
+                cardEmbed.setThumbnail(heropower.image);
+            }
+        } else {
+            cardEmbed.setImage(card.image);
+        }
+        message.channel.send(cardEmbed);
+    }
+    catch (e) {
+        console.log(e);
+    }
+}
+
+async function outputcards(cards,message){
+
+
+    const cardEmbed = new Discord.MessageEmbed()
+    .setColor('#0099ff')
+    .setTitle("搜尋結果")
+    .setDescription(`共有${cards.length}張:`);
+ 
+    classIDs.forEach( (className,classID)=> {
+        subcards = cards.filter(card => card.classId == classID);
+        if (subcards.length>0)
+        {
+        let substring='';
+        let fieldname =className;
+        subcards.forEach((card,index)=>{
+            substring+= (`[[${card.name}](https://playhearthstone.com/zh-tw/cards/${card.slug})] `);
+            if (index >0 && (index%10)===0)
+            {
+                cardEmbed.addField(fieldname, substring, false);
+                substring='';
+                fieldname='\u200b';
+            }
+        });
+        if(substring!='')  cardEmbed.addField(fieldname, substring, false);
+        
+        
+        }
+    });
+    message.channel.send(cardEmbed);
+
+ 
+}
+
+function card_to_message(cards, message, isbg = false) {
     if (cards.length === 0) {
         return message.reply("找不到這張卡片");
     }
@@ -159,58 +226,30 @@ function outputcards2(cards, message, isbg = false) {
     }
 
     else if (cards.length > 5) {
-        let cols = Math.ceil(cards.length / 5);
-        let resultstring = Array(cols).fill('');
-        cards.forEach(function (card, i) {
-            resultstring[Math.floor(i / 5)] += (`[${card.name}](https://playhearthstone.com/zh-tw/cards/${card.id})\n`);
-        });
-        const cardEmbed = new Discord.MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle("搜尋結果")
-            .setDescription(`共有${cards.length}張:`)
-        try {
-            resultstring.forEach(substring => {
-                if (substring != "")
-                    cardEmbed.addField('\u200b', substring, true);
-            });
-            message.channel.send(cardEmbed);
-        }
-        catch (e) {
-            console.log(e);
-        }
+        outputcards(cards,message);
+        // let resultstring = Array(cols).fill('');
+        // cards.forEach(function (card, i) {
+        //     resultstring[Math.floor(i / 5)] += (`[${card.name}](https://playhearthstone.com/zh-tw/cards/${card.id})\n`);
+        // });
+        // const cardEmbed = new Discord.MessageEmbed()
+        //     .setColor('#0099ff')
+        //     .setTitle("搜尋結果")
+        //     .setDescription(`共有${cards.length}張:`)
+        // try {
+        //     resultstring.forEach(substring => {
+        //         if (substring != "")
+        //             cardEmbed.addField('\u200b', substring, true);
+        //     });
+        //     message.channel.send(cardEmbed);
+        // }
+        // catch (e) {
+        //     console.log(e);
+        // }
 
     }
     else {
         cards.forEach(async card => {
-            try {
-                flavor = ""
-
-                const cardEmbed = new Discord.MessageEmbed()
-                    .setColor('#0099ff')
-                    .setTitle(card.name)
-
-                if (card.flavorText) {
-                    flavor = card.flavorText.replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
-                    cardEmbed.setDescription(flavor);
-                }
-                if (isbg) {
-                    cardEmbed.setImage(card.battlegrounds.image);
-
-                    if (card.battlegrounds.hero) {
-                        let heropower = await getcard(card.childIds[0]);
-
-                        let heropowertext = heropower.text.replace(/<b>/g, "**").replace(/<\/b>/g, "**").replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
-                        cardEmbed.setDescription(heropowertext);
-                        cardEmbed.setThumbnail(heropower.image);
-                    }
-                } else {
-                    cardEmbed.setImage(card.image);
-                }
-                await message.channel.send(cardEmbed);
-            }
-            catch (e) {
-                console.log(e);
-            }
+           outputcard(card,message,isbg);
         });
     }
 
@@ -233,7 +272,7 @@ client.on('message', async message => {
         message.channel.send(cardEmbed);
 
     }
-    else if (parsed.command === "search") {
+    else if (parsed.command === "minion") {
         let states = parsed.arguments[0].split('/');
         if (states.length === 3) {
             let resp = await hsClient.cardSearch({
@@ -243,33 +282,47 @@ client.on('message', async message => {
                 set: 'wild',
                 health: states[2],
                 manaCost: states[0],
-                attack: states[1]
+                attack: states[1],
+                type:'minion'
             });
             cards = resp.data.cards;
-            const cardEmbed = new Discord.MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle("搜尋結果")
-            .setDescription(`共有${cards.length}張:`);
-         
-
-            classIDs.forEach( (className,classID)=> {
-                subcards = cards.filter(card => card.classId == classID);
-                if (subcards.length>0)
-                {
-                let substring='';
-                subcards.forEach(card=>{
-                    substring+= (`[[${card.name}](https://playhearthstone.com/zh-tw/cards/${card.id})] `);
-                });
-
-                cardEmbed.addField(className, substring, false);
-                }
-            });
-            message.channel.send(cardEmbed);
-        
-         
+            card_to_message(cards,message);
         }
     }
 
+    else if (parsed.command === "weapon") {
+        let states = parsed.arguments[0].split('/');
+        if (states.length === 3) {
+            let resp = await hsClient.cardSearch({
+                origin: 'tw',
+                locale: 'zh_TW',
+                collectible: 1,
+                set: 'wild',
+                manaCost: states[0],
+                attack: states[1],
+                type:'weapon'
+            });
+            cards = resp.data.cards;
+            cards = cards.filter(card => card.durability==states[2]);
+
+
+            card_to_message(cards,message);
+        }
+    }
+
+    else if (parsed.command === "spell") {
+        let states = parsed.arguments[0];
+            let resp = await hsClient.cardSearch({
+                origin: 'tw',
+                locale: 'zh_TW',
+                collectible: 1,
+                set: 'wild',
+                manaCost: states[0],
+                type:'spell'
+            });
+            cards = resp.data.cards;
+            card_to_message(cards,message);
+    }
     else if (parsed.command === "card") {
         let text = parsed.arguments[0];
 
@@ -284,7 +337,7 @@ client.on('message', async message => {
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
 
-        outputcards2(cards, message);
+        card_to_message(cards, message);
     }
 
 
@@ -299,7 +352,7 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        outputcards2(cards, message, true);
+        card_to_message(cards, message, true);
 
     }
     else if (parsed.command === "duelcard") {
@@ -313,7 +366,7 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        outputcards2(cards, message);
+        card_to_message(cards, message);
 
     }
     else if (parsed.command === "deck") {
