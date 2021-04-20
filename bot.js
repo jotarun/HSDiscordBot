@@ -29,6 +29,7 @@ const classNames = new Map([
 ]);
 
 let classIDs = new Map();
+let setIDs = new Map();
 
 const client = new Discord.Client();
 
@@ -48,15 +49,21 @@ client.on('ready', async () => {
         });
     } catch (error) { console.log(error); }
     const resp = await hsClient.metadata({
-        type: 'classes', 
         origin: 'tw',
         locale: 'zh_TW'
     });
-
-    resp.data.forEach(classdata => {
+    resp.data.classes.forEach(classdata => {
         classIDs.set(classdata.id, classdata.name);
     });
+    resp.data.sets.forEach(setdata => {
+        setIDs.set(setdata.id, setdata.name);
+        if (setdata.aliasSetIds)
+        {
+            setdata.aliasSetIds.forEach(id => {        setIDs.set(id, setdata.name);
+            });
 
+        }
+    });
    
     console.log("start!");
 
@@ -176,6 +183,7 @@ async function outputcard(card,message,isbg=false){
             }
         } else {
             cardEmbed.setImage(card.image);
+            cardEmbed.setFooter(setIDs.get(card.cardSetId));
         }
         message.channel.send(cardEmbed);
     }
@@ -225,27 +233,8 @@ function card_to_message(cards, message, isbg = false) {
         return message.reply(`符合的卡片過多(${cards.length}張)`);
     }
 
-    else if (cards.length > 5) {
+    else if (cards.length > 3) {
         outputcards(cards,message);
-        // let resultstring = Array(cols).fill('');
-        // cards.forEach(function (card, i) {
-        //     resultstring[Math.floor(i / 5)] += (`[${card.name}](https://playhearthstone.com/zh-tw/cards/${card.id})\n`);
-        // });
-        // const cardEmbed = new Discord.MessageEmbed()
-        //     .setColor('#0099ff')
-        //     .setTitle("搜尋結果")
-        //     .setDescription(`共有${cards.length}張:`)
-        // try {
-        //     resultstring.forEach(substring => {
-        //         if (substring != "")
-        //             cardEmbed.addField('\u200b', substring, true);
-        //     });
-        //     message.channel.send(cardEmbed);
-        // }
-        // catch (e) {
-        //     console.log(e);
-        // }
-
     }
     else {
         cards.forEach(async card => {
@@ -264,7 +253,7 @@ client.on('message', async message => {
         const cardEmbed = new Discord.MessageEmbed()
             .setColor('#0099ff')
             .setTitle('機器人指令一覽 ')
-            .addField('!card 關鍵字 查構築模式卡片 可只輸入部分名稱', '例如: !card 油切')
+            .addField('!card 關鍵字 查構築模式卡片 可只輸入部分名稱', '例如: !card 油切\n 標準模式: !card 油切 s \n 經典模式: !card 炸雞 c')
             .addField('!bgcard 關鍵字 查英雄戰場卡片 可只輸入部分名稱', '例如: !bgcard 米歐')
             .addField('!duelcard 關鍵字 查決鬥擂台卡片 可只輸入部分名稱', '例如: !duelcard 錢幣')
             .addField('!deck 牌組代碼', '例如: !deck AAAA');
@@ -312,26 +301,45 @@ client.on('message', async message => {
 
     else if (parsed.command === "spell") {
         let states = parsed.arguments[0];
-            let resp = await hsClient.cardSearch({
-                origin: 'tw',
-                locale: 'zh_TW',
-                collectible: 1,
-                set: 'wild',
-                manaCost: states[0],
-                type:'spell'
-            });
+        let filter = {
+            origin: 'tw',
+            locale: 'zh_TW',
+            collectible: 1,
+            set: 'wild',
+            manaCost: states[0],
+            type:'spell',
+        };
+        let resp = await hsClient.cardSearch(filter);
             cards = resp.data.cards;
             card_to_message(cards,message);
+
+        if (resp.data.pageCount >1)
+        {
+            let page =2;
+            for (; page <=resp.data.pageCount; page ++)
+            {
+                filter.page = page;
+            resp = await hsClient.cardSearch(filter);
+            cards = resp.data.cards;
+            card_to_message(cards,message);
+        }
+
+        }
     }
     else if (parsed.command === "card") {
         let text = parsed.arguments[0];
-
+        let set = 'wild';
+        if (parsed.arguments[1])
+        {
+            if (parsed.arguments[1]==='c') set='classic-cards';
+            else if (parsed.arguments[1]==='s') set='standard';
+        }
         let resp = await hsClient.cardSearch({
             textFilter: text,
             origin: 'tw',
             locale: 'zh_TW',
             collectible: 1,
-            set: 'wild'
+            set: set
 
         });
         cards = resp.data.cards;
