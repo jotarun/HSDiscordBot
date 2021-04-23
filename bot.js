@@ -162,7 +162,16 @@ function cardstoembedd(cards, totalcards) {
     let cols = Math.ceil(cards.length / 5);
     let resultstring = Array(cols).fill('');
     cards.forEach(function (card, i) {
-        resultstring[Math.floor(i / 5)] += (`[${classEmoji[card.classId]}${card.name}](https://playhearthstone.com/zh-tw/cards/${card.slug})\n`);
+        if (card.multiClassIds.length>0)
+        {
+            resultstring[Math.floor(i / 5)] += (`[${classEmoji[card.multiClassIds[0]]}${classEmoji[card.multiClassIds[1]]}${card.name}](https://playhearthstone.com/zh-tw/cards/${card.slug})\n`);
+            
+        }
+        else
+        {
+            resultstring[Math.floor(i / 5)] += (`[${classEmoji[card.classId]}${card.name}](https://playhearthstone.com/zh-tw/cards/${card.slug})\n`);
+
+        }
     });
     resultstring.forEach(substring => {
         if (substring != "")
