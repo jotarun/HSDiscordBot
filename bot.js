@@ -217,7 +217,7 @@ client.on('message', async message => {
         message.channel.send(cardEmbed);
 
     }
-    else if (parsed.command === "minions") {
+    else if (parsed.command === "minion") {
         let filter = {
             origin: 'tw',
             locale: 'zh_TW',
