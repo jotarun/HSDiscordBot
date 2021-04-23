@@ -13,6 +13,7 @@
     "blizzard.js": "^4.1.0",
     "deckstrings": "^2.2.1",
     "discord-command-parser": "^1.5.3",
+    "discord-pages": "^1.0.2",
     "discord.js": "^12.5.3",
     "unirest": "^0.6.0"
   }
