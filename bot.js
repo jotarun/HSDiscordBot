@@ -266,6 +266,13 @@ client.on('message', async message => {
                 resp = await hsClient.cardSearch(filter);
                 cards = resp.data.cards;
             }
+            cards = cards.filter(card => 
+                card.health==states[2]&&
+                card.manaCost==states[0]&&
+                card.attack ==states[1]
+                
+                );
+
             card_to_message(cards, message);
         }
 
