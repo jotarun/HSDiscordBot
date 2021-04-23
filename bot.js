@@ -217,40 +217,50 @@ client.on('message', async message => {
         message.channel.send(cardEmbed);
 
     }
-    else if (parsed.command === "minion") {
+    else if (parsed.command === "minions") {
+        let filter = {
+            origin: 'tw',
+            locale: 'zh_TW',
+            collectible: 1,
+            set: 'wild',
+            type: 'minion'
+        };
         let states = parsed.arguments[0].split('/');
         let classinput = '';
-        if (parsed.arguments[1]) { classinput = parsed.arguments[1]; }
-        else {
-            await message.channel.send('請告訴我你要找的職業(戰/賊/牧/術/賊/薩/獵/DH/無):');
-            const collected = await message.channel.awaitMessages(m => m.author.id == message.author.id, { max: 1, time: 30000, errors: ['time'] })
-                .catch(collected => {
-                    message.channel.send('時間內無回應 請重新搜尋');
-                });
-
-
-            classinput = collected.first().content;
-        }
-
-        if (shortcuts.hasOwnProperty(classinput)) {
-            classinput = shortcuts[classinput];
-        }
 
         if (states.length === 3) {
-            let resp = await hsClient.cardSearch({
-                origin: 'tw',
-                locale: 'zh_TW',
-                collectible: 1,
-                set: 'wild',
-                health: states[2],
-                manaCost: states[0],
-                attack: states[1],
-                type: 'minion',
-                class: classinput
-            });
+            filter['health']= states[2];
+            filter['manaCost']= states[0];
+            filter['attack']= states[1];
+            if (parsed.arguments[1]) {
+                classinput = parsed.arguments[1];
+                if (shortcuts.hasOwnProperty(classinput)) {
+                    classinput = shortcuts[classinput];
+                }
+                filter['class'] = classinput;
+            }
+            let resp = await hsClient.cardSearch(filter);
             cards = resp.data.cards;
+
+            if (resp.data.pageCount > 1) {
+                await message.channel.send('結果過多 請告訴我你要找的職業(戰/賊/牧/術/賊/薩/獵/DH/無):');
+                const collected = await message.channel.awaitMessages(m => m.author.id == message.author.id, { max: 1, time: 30000, errors: ['time'] })
+                    .catch(collected => {
+                        message.channel.send('時間內無回應 請重新搜尋');
+                    });
+                classinput = collected.first().content;
+                if (shortcuts.hasOwnProperty(classinput)) {
+                    classinput = shortcuts[classinput];
+                }
+                filter['class'] = classinput;
+
+                resp = await hsClient.cardSearch(filter);
+                cards = resp.data.cards;
+            }
             card_to_message(cards, message);
         }
+
+
     }
 
     else if (parsed.command === "weapon") {
