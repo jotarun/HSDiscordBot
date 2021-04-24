@@ -49,6 +49,7 @@ const shortcuts = {
     '薩滿': 'shaman',
 
     'DH': 'demonhunter',
+    'dh': 'demonhunter',
     '惡魔獵人': 'demonhunter',
 
     '聖': 'paladin',
