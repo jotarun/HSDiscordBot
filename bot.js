@@ -6,7 +6,7 @@ const DiscordPages = require("discord-pages");
 
 const { encode, decode, FormatType } = require('deckstrings');
 const { metadata } = require('blizzard.js/dist/resources/hs');
-const dataurl = "https://api.hearthstonejson.com/v1/77662/zhTW/cards.collectible.json";
+const dataurl = "https://api.hearthstonejson.com/v1/latest/zhTW/cards.collectible.json";
 
 let cardDB = [];
 const prefix = "!";
@@ -415,6 +415,7 @@ client.on('message', async message => {
             let neutrals = deck.filter(card => (card.cardClass == "NEUTRAL" && card.hasOwnProperty('multiClassGroup') == false));
             let neutralsouput = "";
             neutrals.forEach(card => {
+                console.log(card);
                 neutralsouput += card.count + ' × (' + card.cost + ')**' + card.name + "**\n";
             });
 
