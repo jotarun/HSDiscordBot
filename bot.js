@@ -234,7 +234,7 @@ client.on('message', async message => {
         await req.end(function (res) {
             cardDB = res.body;
         });
-    
+        await message.channel.send('hearthstonjson db updated');
     }
     else if (parsed.command === "minion") {
         let filter = {
