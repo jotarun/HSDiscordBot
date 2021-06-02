@@ -227,6 +227,15 @@ client.on('message', async message => {
         message.channel.send(cardEmbed);
 
     }
+    else if (parsed.command === "updatedb") {
+    
+        var req = unirest("GET", dataurl);
+
+        await req.end(function (res) {
+            cardDB = res.body;
+        });
+    
+    }
     else if (parsed.command === "minion") {
         let filter = {
             origin: 'tw',
