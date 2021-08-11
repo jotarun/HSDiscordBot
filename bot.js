@@ -145,7 +145,11 @@ async function outputcard(card, message, isbg = false) {
             }
         } else {
             cardEmbed.setImage(card.image);
-            cardEmbed.setFooter(setIDs.get(card.cardSetId));
+            setName = setIDs.get(card.cardSetId);
+            if (typeof setName !== 'undefined' && setName !== null){
+                // do stuff
+                cardEmbed.setFooter(setIDs.get(card.cardSetId));
+             }
         }
         message.channel.send(cardEmbed);
     }
