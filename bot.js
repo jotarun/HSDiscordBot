@@ -379,6 +379,26 @@ client.on('message', async message => {
         card_to_message(cards, message);
     }
 
+    else if (parsed.command === "token") {
+        let text = parsed.arguments[0];
+        let set = 'wild';
+        if (parsed.arguments[1]) {
+            if (parsed.arguments[1] === 'c') set = 'classic-cards';
+            else if (parsed.arguments[1] === 's') set = 'standard';
+        }
+        let resp = await hsClient.cardSearch({
+            textFilter: text,
+            origin: 'tw',
+            locale: 'zh_TW',
+            collectible: 0,
+            set: set
+
+        });
+        cards = resp.data.cards;
+        cards = cards.filter(card => card.name.includes(text));
+
+        card_to_message(cards, message);
+    }
 
     else if (parsed.command === "bgcard") {
         let text = parsed.arguments[0];
