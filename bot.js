@@ -120,6 +120,16 @@ async function getcard(id) {
     return resp.data;
 }
 
+async function getbgcard(id) {
+    let resp = await hsClient.cardSearch({
+        id: id,
+        origin: 'tw',
+        locale: 'zh_TW',
+        gameMode: 'battlegrounds'
+    });
+    return resp.data;
+}
+
 async function outputcard(card, message, isbg = false) {
     try {
         flavor = ""
@@ -137,15 +147,19 @@ async function outputcard(card, message, isbg = false) {
             cardEmbed.setImage(card.battlegrounds.image);
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/battlegrounds/${card.slug}`);
             if (card.battlegrounds.hero) {
-                let heropower = await getcard(card.childIds[0]);
+                let heropower = await getbgcard(card.childIds[0]);
 
                 let heropowertext = heropower.text.replace(/<b>/g, "**").replace(/<\/b>/g, "**").replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
                 cardEmbed.setDescription(heropowertext);
                 cardEmbed.setThumbnail(heropower.image);
             }
+            else{
+                // let goldcard = await getbgcard(card.battlegrounds.upgradeId);
+                // console.log(goldcard);
+                // cardEmbed.setThumbnail(goldcard.battlegrounds.imageGold);
+            }
         } else {
             cardEmbed.setImage(card.image);
-            cardEmbed.setThumbnail(card.imageGold);
             setName = setIDs.get(card.cardSetId);
             if (typeof setName !== 'undefined' && setName !== null){
                 // do stuff
