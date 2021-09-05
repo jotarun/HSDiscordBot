@@ -135,7 +135,7 @@ async function outputcard(card, message, isbg = false) {
         }
         if (isbg) {
             cardEmbed.setImage(card.battlegrounds.image);
-
+            cardEmbed.setURL(`https://playhearthstone.com/zh-tw/battlegrounds/${card.slug}`);
             if (card.battlegrounds.hero) {
                 let heropower = await getcard(card.childIds[0]);
 
@@ -145,6 +145,7 @@ async function outputcard(card, message, isbg = false) {
             }
         } else {
             cardEmbed.setImage(card.image);
+            cardEmbed.setThumbnail(card.imageGold);
             setName = setIDs.get(card.cardSetId);
             if (typeof setName !== 'undefined' && setName !== null){
                 // do stuff
