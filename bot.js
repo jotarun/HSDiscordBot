@@ -130,7 +130,7 @@ async function getbgcard(id) {
     return resp.data;
 }
 
-async function outputcard(card, message, isbg = false) {
+async function outputcard(card, message, mode = 0) {
     try {
         flavor = ""
 
@@ -143,7 +143,8 @@ async function outputcard(card, message, isbg = false) {
             flavor = card.flavorText.replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
             cardEmbed.setDescription(flavor);
         }
-        if (isbg) {
+        //bg card
+        if (mode==1) {
             cardEmbed.setImage(card.battlegrounds.image);
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/battlegrounds/${card.slug}`);
             if (card.battlegrounds.hero) {
@@ -158,7 +159,14 @@ async function outputcard(card, message, isbg = false) {
                 // console.log(goldcard);
                 // cardEmbed.setThumbnail(goldcard.battlegrounds.imageGold);
             }
-        } else {
+        } 
+        else if (mode==2)
+        {
+            cardEmbed.setURL(`https://playhearthstone.com/zh-tw/mercenaries/${card.slug}`);
+            cardEmbed.setImage(card.image);
+            setName = setIDs.get(card.cardSetId);
+        }
+        else {
             cardEmbed.setImage(card.image);
             setName = setIDs.get(card.cardSetId);
             if (typeof setName !== 'undefined' && setName !== null){
@@ -208,7 +216,7 @@ async function outputcards(cards, message) {
 
 }
 
-function card_to_message(cards, message, isbg = false) {
+function card_to_message(cards, message, mode = 0) {
     if (cards.length === 0) {
         return message.reply("找不到這張卡片");
     }
@@ -221,7 +229,7 @@ function card_to_message(cards, message, isbg = false) {
     }
     else {
         cards.forEach(async card => {
-            outputcard(card, message, isbg);
+            outputcard(card, message, mode);
         });
     }
 
@@ -426,7 +434,7 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        card_to_message(cards, message,true);
+        card_to_message(cards, message,1);
 
     }
 
@@ -441,7 +449,7 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        card_to_message(cards, message);
+        card_to_message(cards, message,2);
         // console.log(cards);
     }
 
