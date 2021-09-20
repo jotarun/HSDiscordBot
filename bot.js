@@ -426,9 +426,25 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        card_to_message(cards, message, true);
+        card_to_message(cards, message,true);
 
     }
+
+    else if (parsed.command === "mcard") {
+        let text = parsed.arguments[0];
+
+        let resp = await hsClient.cardSearch({
+            gameMode: 'mercenaries',
+            textFilter: text,
+            origin: 'tw',
+            locale: 'zh_TW'
+        });
+        cards = resp.data.cards;
+        cards = cards.filter(card => card.name.includes(text));
+        card_to_message(cards, message);
+        // console.log(cards);
+    }
+
     else if (parsed.command === "duelcard") {
         let text = parsed.arguments[0];
 

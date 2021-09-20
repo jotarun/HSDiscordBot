@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "blizzard.js": "^4.1.0",
+    "blizzard.js": "github:jotarun/blizzard.js#mercenaries",
     "deckstrings": "^2.2.1",
     "discord-command-parser": "^1.5.3",
     "discord-pages": "^1.0.2",
