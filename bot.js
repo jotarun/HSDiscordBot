@@ -121,13 +121,21 @@ async function getcard(id) {
 }
 
 async function getbgcard(id) {
-    let resp = await hsClient.cardSearch({
+    try {
+
+    let resp = await hsClient.card({
         id: id,
         origin: 'tw',
         locale: 'zh_TW',
         gameMode: 'battlegrounds'
     });
     return resp.data;
+    }
+    catch (e) {
+        console.log(e);
+        return null;
+    }
+
 }
 
 async function outputcard(card, message, mode = 0) {
@@ -155,9 +163,8 @@ async function outputcard(card, message, mode = 0) {
                 cardEmbed.setThumbnail(heropower.image);
             }
             else{
-                // let goldcard = await getbgcard(card.battlegrounds.upgradeId);
-                // console.log(goldcard);
-                // cardEmbed.setThumbnail(goldcard.battlegrounds.imageGold);
+                let goldcard = await getbgcard(card.battlegrounds.upgradeId);
+                if (goldcard) cardEmbed.setThumbnail(goldcard.battlegrounds.imageGold);
             }
         } 
         else if (mode==2)
