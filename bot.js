@@ -142,7 +142,7 @@ async function outputcard(card, message, mode = 0) {
     try {
         flavor = ""
 
-        const cardEmbed = new Discord.MessageEmbed()
+        const cardEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle(card.name)
             .setURL(`https://playhearthstone.com/zh-tw/cards/${card.slug}`);
@@ -212,11 +212,59 @@ function cardstoembedd(cards, totalcards) {
     return cardEmbed;
 }
 
-async function outputcards(cards, message) {
+async function search_and_output(filter, message) {
+
+    let resp = await hsClient.cardSearch(filter);
+    cards = resp.data.cards;
+    let cardEmbed = cardstoembedd(cards, resp.data.cardCount);
 
 
-    await message.channel.send({ embeds: [cardstoembedd(cards, cards.length)] });
+    if (resp.data.pageCount > 1) {
 
+        let options = [];
+        for (let p = 1; p <= resp.data.pageCount; p++) {
+            options.push(
+                {
+                    label: '第' + p + '頁',
+                    value: '' + p,
+                });
+        }
+        options[resp.data.page-1].default = true;
+        const menu = new MessageSelectMenu()
+            .setCustomId('SELECT_MENU')
+            .addOptions(options);
+        
+        const row = new MessageActionRow().addComponents(menu);
+        cardEmbed.setDescription(`第1/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
+        const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
+        
+
+        const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 60000 });
+
+        collector.on("collect", async (i) => {
+            await i.deferUpdate();
+            filter.page = i.values[0];
+            resp = await hsClient.cardSearch(filter);
+            cards = resp.data.cards;
+            cardEmbed = cardstoembedd(cards, resp.data.cardCount);
+            cardEmbed.setDescription(`第${resp.data.page}/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
+            options.forEach(o => o.default = false);   
+            options[resp.data.page-1].default = true;
+            menu.setOptions(options);  
+            row.setComponents(menu);
+            await i.editReply({components: [row],embeds:[cardEmbed]});
+            collector.resetTimer();
+        });
+        collector.on('end', async () =>{
+            await msg.edit({embeds:[cardEmbed], components: []});
+
+        })
+    }
+    else {
+
+        await message.channel.send({ embeds: [cardstoembedd(cards, resp.data.cardCount)] });
+
+    }
 
 }
 
@@ -252,8 +300,9 @@ client.on('messageCreate', async message => {
             .addField('`!card 關鍵字` ->查構築模式卡片 可只輸入部分名稱', '例如: !card 油切\n 標準模式: !card 油切 s \n 經典模式: !card 炸雞 c')
             .addField('`!bgcard 關鍵字` ->查英雄戰場卡片 可只輸入部分名稱', '例如: !bgcard 米歐')
             .addField('`!duelcard 關鍵字` ->查決鬥擂台卡片 可只輸入部分名稱', '例如: !duelcard 錢幣')
-            .addField('`!minion 消耗/攻擊力/生命 職業` ->查手下', '例如: !minion 5/1/1 DH')
-            .addField('`!weapon 消耗/攻擊力/耐久 職業` ->查武器', '例如: !weapon 3/3/2 戰')
+            .addField('`!minion 消耗/攻擊力/生命` ->查手下', '例如: !minion 5/1/1')
+            .addField('`!weapon 消耗/攻擊力` ->查武器', '例如: !weapon 3/3/2')
+            .addField('`!spell 消耗` ->查法術', '例如: !spell 3')
             .addField('`!deck 牌組代碼`', '例如: !deck AAAA');
 
         await message.channel.send({ embeds: [cardEmbed] });
@@ -290,32 +339,34 @@ client.on('messageCreate', async message => {
                 }
                 filter['class'] = classinput;
             }
-            let resp = await hsClient.cardSearch(filter);
-            cards = resp.data.cards;
+            await search_and_output(filter, message);
 
-            if (resp.data.pageCount > 1) {
-                await message.channel.send('結果過多 請告訴我你要找的職業(戰/賊/牧/術/賊/薩/獵/DH/無):');
-                const collected = await message.channel.awaitMessages(m => m.author.id == message.author.id, { max: 1, time: 30000, errors: ['time'] })
-                    .catch(collected => {
-                        message.channel.send('時間內無回應 請重新搜尋');
-                    });
-                classinput = collected.first().content;
-                if (shortcuts.hasOwnProperty(classinput)) {
-                    classinput = shortcuts[classinput];
-                }
-                filter['class'] = classinput;
+            // let resp = await hsClient.cardSearch(filter);
+            // cards = resp.data.cards;
 
-                resp = await hsClient.cardSearch(filter);
-                cards = resp.data.cards;
-            }
-            cards = cards.filter(card =>
-                card.health == states[2] &&
-                card.manaCost == states[0] &&
-                card.attack == states[1]
+            // if (resp.data.pageCount > 1) {
+            //     await message.channel.send('結果過多 請告訴我你要找的職業(戰/賊/牧/術/賊/薩/獵/DH/無):');
+            //     const collected = await message.channel.awaitMessages(m => m.author.id == message.author.id, { max: 1, time: 30000, errors: ['time'] })
+            //         .catch(collected => {
+            //             message.channel.send('時間內無回應 請重新搜尋');
+            //         });
+            //     classinput = collected.first().content;
+            //     if (shortcuts.hasOwnProperty(classinput)) {
+            //         classinput = shortcuts[classinput];
+            //     }
+            //     filter['class'] = classinput;
 
-            );
+            //     resp = await hsClient.cardSearch(filter);
+            //     cards = resp.data.cards;
+            // }
+            // cards = cards.filter(card =>
+            //     card.health == states[2] &&
+            //     card.manaCost == states[0] &&
+            //     card.attack == states[1]
 
-            card_to_message(cards, message);
+            // );
+
+            // card_to_message(cards, message);
         }
 
 
@@ -333,8 +384,8 @@ client.on('messageCreate', async message => {
                 classinput = shortcuts[classinput];
             }
         }
-        if (states.length === 3) {
-            let resp = await hsClient.cardSearch({
+        if (states.length === 2) {
+            let filter = {
                 origin: 'tw',
                 locale: 'zh_TW',
                 collectible: 1,
@@ -343,84 +394,43 @@ client.on('messageCreate', async message => {
                 attack: states[1],
                 type: 'weapon',
                 class: classinput
-            });
-            cards = resp.data.cards;
-            cards = cards.filter(card => card.durability == states[2]);
+             };
+            // let resp = await hsClient.cardSearch({
+              
+            // });
+            // cards = resp.data.cards;
+            // cards = cards.filter(card => card.durability == states[2]);
 
-            card_to_message(cards, message);
+            // card_to_message(cards, message);
+        
+        await search_and_output(filter, message);
         }
     }
 
-    else if (parsed.command === "sp") {
+    else if (parsed.command === "spell") {
         let states = parsed.arguments[0];
 
         if (!states) return;
-        if (parseInt(states)>9) 
-        {
-            return message.reply(`沒有符合的卡片！`);
+      
+        if (parsed.arguments[1]) {
+            classinput = parsed.arguments[1];
+
+            if (shortcuts.hasOwnProperty(classinput)) {
+                classinput = shortcuts[classinput];
+            }
         }
+
         let filter = {
             origin: 'tw',
             locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
-            manaCost: states[0],
+            manaCost: states,
             type: 'spell',
-            page: 1
+            class: classinput
         };
+        await search_and_output(filter, message);
 
-        let resp = await hsClient.cardSearch(filter);
-        pages = [];
-        cards = resp.data.cards;
-        let cardEmbed = cardstoembedd(cards, resp.data.cardCount);
-
-
-        if (resp.data.pageCount > 1) {
-
-            let options = [];
-            for (let p = 1; p <= resp.data.pageCount; p++) {
-                options.push(
-                    {
-                        label: '第' + p + '頁',
-                        value: '' + p,
-                    });
-            }
-            options[resp.data.page-1].default = true;
-            const menu = new MessageSelectMenu()
-                .setCustomId('SELECT_MENU')
-                .addOptions(options);
-            
-            const row = new MessageActionRow().addComponents(menu);
-            cardEmbed.setDescription(`第1/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
-            const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
-            
-
-            const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 60000 });
-
-            collector.on("collect", async (i) => {
-                await i.deferUpdate();
-                filter.page = i.values[0];
-                resp = await hsClient.cardSearch(filter);
-                cards = resp.data.cards;
-                cardEmbed = cardstoembedd(cards, resp.data.cardCount);
-                cardEmbed.setDescription(`第${resp.data.page}/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
-                options.forEach(o => o.default = false);   
-                options[resp.data.page-1].default = true;
-                menu.setOptions(options);  
-                row.setComponents(menu);
-                await i.editReply({components: [row],embeds:[cardEmbed]});
-                collector.resetTimer();
-            });
-            collector.on('end', async () =>{
-                await msg.edit({embeds:[cardEmbed], components: []});
-
-            })
-        }
-        else {
-
-            await message.channel.send({ embeds: [cardstoembedd(cards, resp.data.cardCount)] });
-
-        }
 
     }
     else if (parsed.command === "card") {
@@ -492,7 +502,6 @@ client.on('messageCreate', async message => {
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
         card_to_message(cards, message, 2);
-        // console.log(cards);
     }
 
     else if (parsed.command === "duelcard") {
@@ -529,7 +538,6 @@ client.on('messageCreate', async message => {
             let neutrals = deck.filter(card => (card.cardClass == "NEUTRAL" && card.hasOwnProperty('multiClassGroup') == false));
             let neutralsouput = "";
             neutrals.forEach(card => {
-                console.log(card);
                 neutralsouput += card.count + ' × (' + card.cost + ')**' + card.name + "**\n";
             });
 
@@ -548,7 +556,6 @@ client.on('messageCreate', async message => {
 
         }
         catch (e) {
-            console.log(e);
             return message.reply(`牌組代碼有誤！`);
         }
 
