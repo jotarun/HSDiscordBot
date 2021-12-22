@@ -353,7 +353,12 @@ client.on('messageCreate', async message => {
 
     else if (parsed.command === "spell") {
         let states = parsed.arguments[0];
+
         if (!states) return;
+        if (parseInt(states)>9) 
+        {
+            return message.reply(`沒有符合的卡片！`);
+        }
         let filter = {
             origin: 'tw',
             locale: 'zh_TW',
@@ -391,7 +396,7 @@ client.on('messageCreate', async message => {
             const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
             
 
-            const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 1500 });
+            const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 60000 });
 
             collector.on("collect", async (i) => {
                 await i.deferUpdate();
