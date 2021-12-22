@@ -218,52 +218,65 @@ async function search_and_output(filter, message) {
     cards = resp.data.cards;
     let cardEmbed = cardstoembedd(cards, resp.data.cardCount);
 
+    if (resp.data.cardCount === 0) {
+        return message.reply("找不到這張卡片");
+    }
 
-    if (resp.data.pageCount > 1) {
+    else if (resp.data.cardCount <= 3) {
 
-        let options = [];
-        for (let p = 1; p <= resp.data.pageCount; p++) {
-            options.push(
-                {
-                    label: '第' + p + '頁',
-                    value: '' + p,
-                });
-        }
-        options[resp.data.page-1].default = true;
-        const menu = new MessageSelectMenu()
-            .setCustomId('SELECT_MENU')
-            .addOptions(options);
-        
-        const row = new MessageActionRow().addComponents(menu);
-        cardEmbed.setDescription(`第1/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
-        const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
-        
-
-        const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 60000 });
-
-        collector.on("collect", async (i) => {
-            await i.deferUpdate();
-            filter.page = i.values[0];
-            resp = await hsClient.cardSearch(filter);
-            cards = resp.data.cards;
-            cardEmbed = cardstoembedd(cards, resp.data.cardCount);
-            cardEmbed.setDescription(`第${resp.data.page}/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
-            options.forEach(o => o.default = false);   
-            options[resp.data.page-1].default = true;
-            menu.setOptions(options);  
-            row.setComponents(menu);
-            await i.editReply({components: [row],embeds:[cardEmbed]});
-            collector.resetTimer();
+        cards.forEach(async card => {
+            outputcard(card, message, mode);
         });
-        collector.on('end', async () =>{
-            await msg.edit({embeds:[cardEmbed], components: []});
-
-        })
     }
     else {
 
-        await message.channel.send({ embeds: [cardstoembedd(cards, resp.data.cardCount)] });
 
+        if (resp.data.pageCount > 1) {
+
+            let options = [];
+            for (let p = 1; p <= resp.data.pageCount; p++) {
+                options.push(
+                    {
+                        label: '第' + p + '頁',
+                        value: '' + p,
+                    });
+            }
+            options[resp.data.page - 1].default = true;
+            const menu = new MessageSelectMenu()
+                .setCustomId('SELECT_MENU')
+                .addOptions(options);
+
+            const row = new MessageActionRow().addComponents(menu);
+            cardEmbed.setDescription(`第1/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
+            const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
+
+
+            const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 60000 });
+
+            collector.on("collect", async (i) => {
+                await i.deferUpdate();
+                filter.page = i.values[0];
+                resp = await hsClient.cardSearch(filter);
+                cards = resp.data.cards;
+                cardEmbed = cardstoembedd(cards, resp.data.cardCount);
+                cardEmbed.setDescription(`第${resp.data.page}/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
+                options.forEach(o => o.default = false);
+                options[resp.data.page - 1].default = true;
+                menu.setOptions(options);
+                row.setComponents(menu);
+                await i.editReply({ components: [row], embeds: [cardEmbed] });
+                collector.resetTimer();
+            });
+            collector.on('end', async () => {
+                await msg.edit({ embeds: [cardEmbed], components: [] });
+
+            })
+        }
+        else {
+
+            await message.channel.send({ embeds: [cardstoembedd(cards, resp.data.cardCount)] });
+
+        }
     }
 
 }
@@ -323,7 +336,8 @@ client.on('messageCreate', async message => {
             locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
-            type: 'minion'
+            type: 'minion',
+            sort: 'classes:asc'
         };
         let states = parsed.arguments[0].split('/');
         let classinput = '';
@@ -393,17 +407,19 @@ client.on('messageCreate', async message => {
                 manaCost: states[0],
                 attack: states[1],
                 type: 'weapon',
-                class: classinput
-             };
+                class: classinput,
+                sort: 'classes:asc'
+
+            };
             // let resp = await hsClient.cardSearch({
-              
+
             // });
             // cards = resp.data.cards;
             // cards = cards.filter(card => card.durability == states[2]);
 
             // card_to_message(cards, message);
-        
-        await search_and_output(filter, message);
+
+            await search_and_output(filter, message);
         }
     }
 
@@ -411,7 +427,7 @@ client.on('messageCreate', async message => {
         let states = parsed.arguments[0];
 
         if (!states) return;
-      
+
         if (parsed.arguments[1]) {
             classinput = parsed.arguments[1];
 
@@ -427,7 +443,9 @@ client.on('messageCreate', async message => {
             set: 'wild',
             manaCost: states,
             type: 'spell',
-            class: classinput
+            class: classinput,
+            sort: 'classes:asc'
+
         };
         await search_and_output(filter, message);
 
@@ -440,18 +458,28 @@ client.on('messageCreate', async message => {
             if (parsed.arguments[1] === 'c') set = 'classic-cards';
             else if (parsed.arguments[1] === 's') set = 'standard';
         }
-        let resp = await hsClient.cardSearch({
-            textFilter: text,
-            origin: 'tw',
-            locale: 'zh_TW',
-            collectible: 1,
-            set: set
+        filter = {
+                textFilter: text,
+                origin: 'tw',
+                locale: 'zh_TW',
+                collectible: 1,
+                set: set,
+                sort: 'classes:asc,manaCost:asc,attack:asc'
+        }
+        await search_and_output(filter, message);
 
-        });
-        cards = resp.data.cards;
-        cards = cards.filter(card => card.name.includes(text));
+        // let resp = await hsClient.cardSearch({
+        //     textFilter: text,
+        //     origin: 'tw',
+        //     locale: 'zh_TW',
+        //     collectible: 1,
+        //     set: set
 
-        card_to_message(cards, message);
+        // });
+        // cards = resp.data.cards;
+        // cards = cards.filter(card => card.name.includes(text));
+
+        // card_to_message(cards, message);
     }
 
     else if (parsed.command === "token") {
@@ -461,18 +489,28 @@ client.on('messageCreate', async message => {
             if (parsed.arguments[1] === 'c') set = 'classic-cards';
             else if (parsed.arguments[1] === 's') set = 'standard';
         }
-        let resp = await hsClient.cardSearch({
+        // let resp = await hsClient.cardSearch({
+        //     textFilter: text,
+        //     origin: 'tw',
+        //     locale: 'zh_TW',
+        //     collectible: 0,
+        //     set: set,
+        //     sort: 'classes:asc,manaCost:asc,attack:asc'
+        // });
+        // cards = resp.data.cards;
+        // cards = cards.filter(card => card.name.includes(text));
+
+        // card_to_message(cards, message);
+        filter = {
             textFilter: text,
             origin: 'tw',
             locale: 'zh_TW',
             collectible: 0,
-            set: set
+            set: set,
+            sort: 'classes:asc,manaCost:asc,attack:asc'
+    }
+        await search_and_output(filter, message);
 
-        });
-        cards = resp.data.cards;
-        cards = cards.filter(card => card.name.includes(text));
-
-        card_to_message(cards, message);
     }
 
     else if (parsed.command === "bgcard") {
@@ -482,7 +520,7 @@ client.on('messageCreate', async message => {
             gameMode: 'battlegrounds',
             textFilter: text,
             origin: 'tw',
-            locale: 'zh_TW'
+            locale: 'zh_TW',
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
@@ -497,7 +535,7 @@ client.on('messageCreate', async message => {
             gameMode: 'mercenaries',
             textFilter: text,
             origin: 'tw',
-            locale: 'zh_TW'
+            locale: 'zh_TW',
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
@@ -511,7 +549,9 @@ client.on('messageCreate', async message => {
             gameMode: 'duels',
             textFilter: text,
             origin: 'tw',
-            locale: 'zh_TW'
+            locale: 'zh_TW',
+            sort: 'classes:asc,manaCost:asc,attack:asc'
+
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
