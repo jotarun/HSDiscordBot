@@ -351,7 +351,7 @@ client.on('messageCreate', async message => {
         }
     }
 
-    else if (parsed.command === "spell") {
+    else if (parsed.command === "sp") {
         let states = parsed.arguments[0];
 
         if (!states) return;
@@ -385,12 +385,11 @@ client.on('messageCreate', async message => {
                         value: '' + p,
                     });
             }
-
+            options[resp.data.page-1].default = true;
             const menu = new MessageSelectMenu()
                 .setCustomId('SELECT_MENU')
-                .setPlaceholder('第' + resp.data.page +'頁')
                 .addOptions(options);
-
+            
             const row = new MessageActionRow().addComponents(menu);
             cardEmbed.setDescription(`第1/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
             const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
@@ -405,7 +404,11 @@ client.on('messageCreate', async message => {
                 cards = resp.data.cards;
                 cardEmbed = cardstoembedd(cards, resp.data.cardCount);
                 cardEmbed.setDescription(`第${resp.data.page}/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
-                await i.editReply({embeds:[cardEmbed], components: [row]});
+                options.forEach(o => o.default = false);   
+                options[resp.data.page-1].default = true;
+                menu.setOptions(options);  
+                row.setComponents(menu);
+                await i.editReply({components: [row],embeds:[cardEmbed]});
                 collector.resetTimer();
             });
             collector.on('end', async () =>{
