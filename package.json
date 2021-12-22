@@ -7,8 +7,7 @@
     "start": "node bot.js"
   },
   "engines": {
-    "node": "15.x",
-    "npm": "7.22.x"
+    "node": ">=16.6"
   },
   "keywords": [],
   "author": "",
@@ -16,9 +15,10 @@
   "dependencies": {
     "blizzard.js": "github:jotarun/blizzard.js#mercenaries",
     "deckstrings": "^2.2.1",
+    "discord": "^0.8.2",
     "discord-command-parser": "^1.5.3",
     "discord-pages": "^1.0.2",
-    "discord.js": "^12.5.3",
+    "discord.js": "^13.3.1",
     "unirest": "^0.6.0"
   }
 }

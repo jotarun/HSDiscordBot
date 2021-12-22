@@ -1,8 +1,9 @@
-const Discord = require('discord.js');
+const { Client, Intents } = require('discord.js');
 const parser = require("discord-command-parser");
 var unirest = require("unirest");
 const blizzard = require('blizzard.js')
-const DiscordPages = require("discord-pages");
+const { MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu } = require('discord.js');
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 const { encode, decode, FormatType } = require('deckstrings');
 const { metadata } = require('blizzard.js/dist/resources/hs');
@@ -69,7 +70,6 @@ const shortcuts = {
 const classIDs = new Map();
 const setIDs = new Map();
 
-const client = new Discord.Client();
 const classEmoji = [];
 let hsClient;
 
@@ -123,13 +123,13 @@ async function getcard(id) {
 async function getbgcard(id) {
     try {
 
-    let resp = await hsClient.card({
-        id: id,
-        origin: 'tw',
-        locale: 'zh_TW',
-        gameMode: 'battlegrounds'
-    });
-    return resp.data;
+        let resp = await hsClient.card({
+            id: id,
+            origin: 'tw',
+            locale: 'zh_TW',
+            gameMode: 'battlegrounds'
+        });
+        return resp.data;
     }
     catch (e) {
         console.log(e);
@@ -152,7 +152,7 @@ async function outputcard(card, message, mode = 0) {
             cardEmbed.setDescription(flavor);
         }
         //bg card
-        if (mode==1) {
+        if (mode == 1) {
             cardEmbed.setImage(card.battlegrounds.image);
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/battlegrounds/${card.slug}`);
             if (card.battlegrounds.hero) {
@@ -162,13 +162,12 @@ async function outputcard(card, message, mode = 0) {
                 cardEmbed.setDescription(heropowertext);
                 cardEmbed.setThumbnail(heropower.image);
             }
-            else{
+            else {
                 let goldcard = await getbgcard(card.battlegrounds.upgradeId);
                 if (goldcard) cardEmbed.setThumbnail(goldcard.battlegrounds.imageGold);
             }
-        } 
-        else if (mode==2)
-        {
+        }
+        else if (mode == 2) {
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/mercenaries/${card.slug}`);
             cardEmbed.setImage(card.image);
             setName = setIDs.get(card.cardSetId);
@@ -176,12 +175,12 @@ async function outputcard(card, message, mode = 0) {
         else {
             cardEmbed.setImage(card.image);
             setName = setIDs.get(card.cardSetId);
-            if (typeof setName !== 'undefined' && setName !== null){
+            if (typeof setName !== 'undefined' && setName !== null) {
                 // do stuff
                 cardEmbed.setFooter(setIDs.get(card.cardSetId));
-             }
+            }
         }
-        message.channel.send(cardEmbed);
+        await message.channel.send({ embeds: [cardEmbed] });
     }
     catch (e) {
         console.log(e);
@@ -190,20 +189,18 @@ async function outputcard(card, message, mode = 0) {
 
 function cardstoembedd(cards, totalcards) {
 
-    const cardEmbed = new Discord.MessageEmbed()
+    const cardEmbed = new MessageEmbed()
         .setColor('#0099ff')
         .setTitle("搜尋結果")
         .setDescription(`共有${totalcards}張:`);
     let cols = Math.ceil(cards.length / 5);
     let resultstring = Array(cols).fill('');
     cards.forEach(function (card, i) {
-        if (card.multiClassIds.length>0)
-        {
+        if (card.multiClassIds.length > 0) {
             resultstring[Math.floor(i / 5)] += (`[${classEmoji[card.multiClassIds[0]]}${classEmoji[card.multiClassIds[1]]}${card.name}](https://playhearthstone.com/zh-tw/cards/${card.slug})\n`);
-            
+
         }
-        else
-        {
+        else {
             resultstring[Math.floor(i / 5)] += (`[${classEmoji[card.classId]}${card.name}](https://playhearthstone.com/zh-tw/cards/${card.slug})\n`);
 
         }
@@ -218,12 +215,12 @@ function cardstoembedd(cards, totalcards) {
 async function outputcards(cards, message) {
 
 
-    message.channel.send(cardstoembedd(cards, cards.length));
+    await message.channel.send({ embeds: [cardstoembedd(cards, cards.length)] });
 
 
 }
 
-function card_to_message(cards, message, mode = 0) {
+async function card_to_message(cards, message, mode = 0) {
     if (cards.length === 0) {
         return message.reply("找不到這張卡片");
     }
@@ -232,7 +229,8 @@ function card_to_message(cards, message, mode = 0) {
     }
 
     else if (cards.length > 3) {
-        message.channel.send(cardstoembedd(cards, cards.length));
+
+        await message.channel.send({ embeds: [cardstoembedd(cards, cards.length)] });
     }
     else {
         cards.forEach(async card => {
@@ -243,12 +241,12 @@ function card_to_message(cards, message, mode = 0) {
 }
 
 
-client.on('message', async message => {
+client.on('messageCreate', async message => {
     const parsed = parser.parse(message, prefix);
     if (!parsed.success) return;
 
     if (parsed.command === "hshelp") {
-        const cardEmbed = new Discord.MessageEmbed()
+        const cardEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('機器人指令一覽 ')
             .addField('`!card 關鍵字` ->查構築模式卡片 可只輸入部分名稱', '例如: !card 油切\n 標準模式: !card 油切 s \n 經典模式: !card 炸雞 c')
@@ -258,11 +256,11 @@ client.on('message', async message => {
             .addField('`!weapon 消耗/攻擊力/耐久 職業` ->查武器', '例如: !weapon 3/3/2 戰')
             .addField('`!deck 牌組代碼`', '例如: !deck AAAA');
 
-        message.channel.send(cardEmbed);
+        await message.channel.send({ embeds: [cardEmbed] });
 
     }
     else if (parsed.command === "updatedb") {
-    
+
         var req = unirest("GET", dataurl);
 
         await req.end(function (res) {
@@ -282,9 +280,9 @@ client.on('message', async message => {
         let classinput = '';
 
         if (states.length === 3) {
-            filter['health']= states[2];
-            filter['manaCost']= states[0];
-            filter['attack']= states[1];
+            filter['health'] = states[2];
+            filter['manaCost'] = states[0];
+            filter['attack'] = states[1];
             if (parsed.arguments[1]) {
                 classinput = parsed.arguments[1];
                 if (shortcuts.hasOwnProperty(classinput)) {
@@ -310,12 +308,12 @@ client.on('message', async message => {
                 resp = await hsClient.cardSearch(filter);
                 cards = resp.data.cards;
             }
-            cards = cards.filter(card => 
-                card.health==states[2]&&
-                card.manaCost==states[0]&&
-                card.attack ==states[1]
-                
-                );
+            cards = cards.filter(card =>
+                card.health == states[2] &&
+                card.manaCost == states[0] &&
+                card.attack == states[1]
+
+            );
 
             card_to_message(cards, message);
         }
@@ -363,29 +361,58 @@ client.on('message', async message => {
             set: 'wild',
             manaCost: states[0],
             type: 'spell',
+            page: 1
         };
 
         let resp = await hsClient.cardSearch(filter);
         pages = [];
         cards = resp.data.cards;
-        pages.push(cardstoembedd(cards, resp.data.cardCount
-        ));
+        let cardEmbed = cardstoembedd(cards, resp.data.cardCount);
+
+
         if (resp.data.pageCount > 1) {
-            let page = 2;
-            for (; page <= resp.data.pageCount; page++) {
-                filter.page = page;
+
+            let options = [];
+            for (let p = 1; p <= resp.data.pageCount; p++) {
+                options.push(
+                    {
+                        label: '第' + p + '頁',
+                        value: '' + p,
+                    });
+            }
+
+            const menu = new MessageSelectMenu()
+                .setCustomId('SELECT_MENU')
+                .setPlaceholder('第' + resp.data.page +'頁')
+                .addOptions(options);
+
+            const row = new MessageActionRow().addComponents(menu);
+            cardEmbed.setDescription(`第1/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
+            const msg = await message.channel.send({ components: [row], embeds: [cardEmbed] });
+            
+
+            const collector = message.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU', time: 1500 });
+
+            collector.on("collect", async (i) => {
+                await i.deferUpdate();
+                filter.page = i.values[0];
                 resp = await hsClient.cardSearch(filter);
                 cards = resp.data.cards;
-                pages.push(cardstoembedd(cards, resp.data.cardCount));
-            }
-        }
-        const embedPages = new DiscordPages({
-            pages: pages,
-            channel: message.channel,
-            restricted: (user) => user.id === message.author.id,
+                cardEmbed = cardstoembedd(cards, resp.data.cardCount);
+                cardEmbed.setDescription(`第${resp.data.page}/${resp.data.pageCount}頁 共有${resp.data.cardCount}張:`);
+                await i.editReply({embeds:[cardEmbed], components: [row]});
+                collector.resetTimer();
+            });
+            collector.on('end', async () =>{
+                await msg.edit({embeds:[cardEmbed], components: []});
 
-        });
-        embedPages.createPages();
+            })
+        }
+        else {
+
+            await message.channel.send({ embeds: [cardstoembedd(cards, resp.data.cardCount)] });
+
+        }
 
     }
     else if (parsed.command === "card") {
@@ -441,7 +468,7 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        card_to_message(cards, message,1);
+        card_to_message(cards, message, 1);
 
     }
 
@@ -456,7 +483,7 @@ client.on('message', async message => {
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
-        card_to_message(cards, message,2);
+        card_to_message(cards, message, 2);
         // console.log(cards);
     }
 
@@ -478,7 +505,7 @@ client.on('message', async message => {
         try {
             let decoded = decode(parsed.arguments[0]);
             hero = cardDB.find(card => card.dbfId == decoded.heroes[0]);
-            const cardEmbed = new Discord.MessageEmbed()
+            const cardEmbed = new MessageEmbed()
                 .setTitle(modeNames.get(decoded.format) + " " + classNames.get(hero.cardClass) + " 牌組")
                 .setColor('#0099ff')
                 .setDescription("[在官網檢視牌組](https://playhearthstone.com/zh-tw/deckbuilder?deckcode=" + encodeURIComponent(parsed.arguments[0]) + ")");
@@ -509,7 +536,7 @@ client.on('message', async message => {
             if (classesouput.length > 0)
                 cardEmbed.addField("職業", classesouput, true);
 
-            message.channel.send(cardEmbed);
+            await message.channel.send({ embeds: [cardEmbed] });
 
         }
         catch (e) {
@@ -520,6 +547,7 @@ client.on('message', async message => {
     }
 
 });
+
 
 
 
