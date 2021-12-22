@@ -225,7 +225,7 @@ async function search_and_output(filter, message) {
     else if (resp.data.cardCount <= 3) {
 
         cards.forEach(async card => {
-            outputcard(card, message, mode);
+            outputcard(card, message);
         });
     }
     else {
