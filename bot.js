@@ -311,7 +311,7 @@ client.on('messageCreate', async message => {
             .setColor('#0099ff')
             .setTitle('機器人指令一覽 ')
             .addField('`!card 關鍵字` ->查構築模式卡片 可只輸入部分名稱', '例如: !card 油切\n 標準模式: !card 油切 s \n 經典模式: !card 炸雞 c')
-            .addField('`!token 關鍵字` ->查構築模式衍生卡片 可只輸入部分名稱', '例如: !card 樹人\n 標準模式: !card 油切 s \n 經典模式: !card 炸雞 c')
+            .addField('`!token 關鍵字` ->查構築模式衍生卡片 可只輸入部分名稱', '例如: !card 樹人\n')
             .addField('`!bgcard 關鍵字` ->查英雄戰場卡片 可只輸入部分名稱', '例如: !bgcard 米歐')
             .addField('`!duelcard 關鍵字` ->查決鬥擂台卡片 可只輸入部分名稱', '例如: !duelcard 錢幣')
             .addField('`!minion 消耗/攻擊力/生命` ->查手下', '例如: !minion 5/1/1')
