@@ -158,7 +158,15 @@ async function outputcard(card, message, mode = 0) {
             cardEmbed.setImage(card.battlegrounds.image);
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/battlegrounds/${card.slug}`);
             if (card.battlegrounds.hero) {
-                let heropower = await getbgcard(card.childIds[0]);
+                console.log(card);
+                let heropower;
+                let i=0;
+                do{
+                heropower =await getbgcard(card.childIds[i]);
+                i++;
+                }
+                while (heropower.cardTypeId!=10);
+
 
                 let heropowertext = heropower.text.replace(/<b>/g, "**").replace(/<\/b>/g, "**").replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
                 cardEmbed.setDescription(heropowertext);
