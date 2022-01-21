@@ -183,9 +183,8 @@ async function outputcard(card, message, mode = 0) {
                 await message.channel.send({ embeds: [cardEmbed], components: [row] });
                 const collector = message.channel.createMessageComponentCollector({ filter, componentType: 'BUTTON',time: 60000 });
                 collector.on("collect", async (i) => {
-                    await i.deferUpdate();
+                    await i.update({  embeds: [cardEmbed], components: [] });
                     await outputcard(buddy, message, mode);
-                    await i.editReply({  embeds: [cardEmbed], components: [] });
                 });
             }
             else {
