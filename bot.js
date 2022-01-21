@@ -140,7 +140,8 @@ async function getbgcard(id) {
 
 async function outputcard(card, message, mode = 0) {
     try {
-        flavor = ""
+        let flavor = ""
+        const row = new MessageActionRow();
 
         const cardEmbed = new MessageEmbed()
             .setColor('#0099ff')
@@ -153,6 +154,7 @@ async function outputcard(card, message, mode = 0) {
         }
         //bg card
         if (mode == 1) {
+
             cardEmbed.setImage(card.battlegrounds.image);
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/battlegrounds/${card.slug}`);
             if (card.battlegrounds.hero) {
@@ -161,16 +163,35 @@ async function outputcard(card, message, mode = 0) {
                 let heropowertext = heropower.text.replace(/<b>/g, "**").replace(/<\/b>/g, "**").replace(/<i>/g, "*").replace(/<\/i>/g, "*").replace(/(<([^>]+)>)/gi, "").replace(/\\n/gi, "\n");
                 cardEmbed.setDescription(heropowertext);
                 cardEmbed.setThumbnail(heropower.image);
+                let buddy = await getbgcard(card.battlegrounds.companionId);
+
+                row.addComponents(
+                    new MessageButton()
+                        .setCustomId(buddy.name)
+                        .setLabel('夥伴:' + buddy.name)
+                        .setStyle('PRIMARY'),
+                );
+                const filter = i => i.customId === buddy.name;
+                await message.channel.send({ embeds: [cardEmbed], components: [row] });
+                const collector = message.channel.createMessageComponentCollector({ filter, componentType: 'BUTTON',time: 60000 });
+                collector.on("collect", async (i) => {
+                    await i.deferUpdate();
+                    await outputcard(buddy, message, mode);
+                    await i.editReply({  embeds: [cardEmbed], components: [] });
+                });
             }
             else {
                 let goldcard = await getbgcard(card.battlegrounds.upgradeId);
                 if (goldcard) cardEmbed.setThumbnail(goldcard.battlegrounds.imageGold);
+                await message.channel.send({ embeds: [cardEmbed] });
             }
         }
         else if (mode == 2) {
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/mercenaries/${card.slug}`);
             cardEmbed.setImage(card.image);
             setName = setIDs.get(card.cardSetId);
+            await message.channel.send({ embeds: [cardEmbed] });
+
         }
         else {
             cardEmbed.setImage(card.image);
@@ -179,8 +200,8 @@ async function outputcard(card, message, mode = 0) {
                 // do stuff
                 cardEmbed.setFooter(setIDs.get(card.cardSetId));
             }
+            await message.channel.send({ embeds: [cardEmbed] });
         }
-        await message.channel.send({ embeds: [cardEmbed] });
     }
     catch (e) {
         console.log(e);
@@ -461,12 +482,12 @@ client.on('messageCreate', async message => {
             else if (parsed.arguments[1] === 's') set = 'standard';
         }
         filter = {
-                textFilter: text,
-                origin: 'tw',
-                locale: 'zh_TW',
-                collectible: 1,
-                set: set,
-                sort: 'classes:asc,manaCost:asc,attack:asc'
+            textFilter: text,
+            origin: 'tw',
+            locale: 'zh_TW',
+            collectible: 1,
+            set: set,
+            sort: 'classes:asc,manaCost:asc,attack:asc'
         }
         await search_and_output(filter, message);
 
@@ -510,7 +531,7 @@ client.on('messageCreate', async message => {
             collectible: 0,
             set: set,
             sort: 'classes:asc,manaCost:asc,attack:asc'
-    }
+        }
         await search_and_output(filter, message);
 
     }
