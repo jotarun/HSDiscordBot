@@ -8,8 +8,11 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 const { encode, decode, FormatType } = require('deckstrings');
 const { metadata } = require('blizzard.js/dist/resources/hs');
 const dataurl = "https://api.hearthstonejson.com/v1/latest/zhTW/cards.collectible.json";
+const mercdataurl = "https://api.hearthstonejson.com/v1/latest/zhTW/mercenaries.json";
 
 let cardDB = [];
+let mercDB = [];
+
 const prefix = "!";
 const modeNames = new Map([
     [FormatType.FT_WILD, '開放'],
@@ -76,9 +79,16 @@ let hsClient;
 client.on('ready', async () => {
     var req = unirest("GET", dataurl);
 
-    await req.end(function (res) {
+    await req.then(function (res) {
         cardDB = res.body;
     });
+
+    req = unirest("GET", mercdataurl);
+
+    await req.then(function (res) {
+        mercDB = res.body;
+    });
+
 
     try {
         hsClient = await blizzard.hs.createInstance({
@@ -193,6 +203,7 @@ async function outputcard(card, message, mode = 0) {
                 await message.channel.send({ embeds: [cardEmbed] });
             }
         }
+        //mercenaries
         else if (mode == 2) {
             cardEmbed.setURL(`https://playhearthstone.com/zh-tw/mercenaries/${card.slug}`);
             cardEmbed.setImage(card.image);
@@ -205,7 +216,7 @@ async function outputcard(card, message, mode = 0) {
             setName = setIDs.get(card.cardSetId);
             if (typeof setName !== 'undefined' && setName !== null) {
                 // do stuff
-                cardEmbed.setFooter(setIDs.get(card.cardSetId));
+                cardEmbed.setFooter({ text: setIDs.get(card.cardSetId)});
             }
             await message.channel.send({ embeds: [cardEmbed] });
         }
@@ -339,14 +350,14 @@ client.on('messageCreate', async message => {
             .setColor('#0099ff')
             .setTitle('機器人指令一覽 ')
             .addField('`!card 關鍵字` ->查構築模式卡片 可只輸入部分名稱', '例如: !card 油切\n 標準模式: !card 油切 s \n 經典模式: !card 炸雞 c')
-            .addField('`!token 關鍵字` ->查構築模式衍生卡片 可只輸入部分名稱', '例如: !card 樹人\n')
+            .addField('`!token 關鍵字` ->查構築模式衍生卡片 可只輸入部分名稱', '例如: !token 樹人\n')
             .addField('`!bgcard 關鍵字` ->查英雄戰場卡片 可只輸入部分名稱', '例如: !bgcard 米歐')
             .addField('`!duelcard 關鍵字` ->查決鬥擂台卡片 可只輸入部分名稱', '例如: !duelcard 錢幣')
             .addField('`!minion 消耗/攻擊力/生命` ->查手下', '例如: !minion 5/1/1')
             .addField('`!weapon 消耗/攻擊力` ->查武器', '例如: !weapon 3/3')
             .addField('`!spell 消耗` ->查法術', '例如: !spell 3')
             .addField('`!deck 牌組代碼`', '例如: !deck AAAA')
-            .setFooter('關鍵字搜尋會包含卡片說明文字 效果同官網');
+            .setFooter({ text: '關鍵字搜尋會包含卡片說明文字 效果同官網'});
 
         await message.channel.send({ embeds: [cardEmbed] });
 
