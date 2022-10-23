@@ -97,7 +97,7 @@ client.on('ready', async () => {
         });
     } catch (error) { console.log(error); }
     const resp = await hsClient.metadata({
-        origin: 'tw',
+        origin: 'us',
         locale: 'zh_TW'
     });
     resp.data.classes.forEach(classdata => {
@@ -124,7 +124,7 @@ client.on('ready', async () => {
 async function getcard(id) {
     let resp = await hsClient.card({
         id: id,
-        origin: 'tw',
+        origin: 'us',
         locale: 'zh_TW'
     });
     return resp.data;
@@ -135,7 +135,7 @@ async function getbgcard(id) {
 
         let resp = await hsClient.card({
             id: id,
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
             gameMode: 'battlegrounds'
         });
@@ -371,9 +371,24 @@ client.on('messageCreate', async message => {
         });
         await message.channel.send('hearthstonjson db updated');
     }
+
+
+
+    
+    
+    else if (parsed.command === "bgrank"){
+
+        //fetch hearthstone battleground rank in json
+        let bgrankurl = "https://playhearthstone.com/en-us/api/community/leaderboardsData?region=AP&leaderboardId=BG&seasonId=3";
+        let req = unirest("GET", bgrankurl);
+        let bgrank = await req.end((res) => res.body);
+
+        
+    }
+
     else if (parsed.command === "minion") {
         let filter = {
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
@@ -441,7 +456,7 @@ client.on('messageCreate', async message => {
         }
         if (states.length === 2) {
             let filter = {
-                origin: 'tw',
+                origin: 'us',
                 locale: 'zh_TW',
                 collectible: 1,
                 set: 'wild',
@@ -478,7 +493,7 @@ client.on('messageCreate', async message => {
         }
 
         let filter = {
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
@@ -501,7 +516,7 @@ client.on('messageCreate', async message => {
         }
         filter = {
             textFilter: text,
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
             collectible: 1,
             set: set,
@@ -511,7 +526,7 @@ client.on('messageCreate', async message => {
 
         // let resp = await hsClient.cardSearch({
         //     textFilter: text,
-        //     origin: 'tw',
+        //     origin: 'us',
         //     locale: 'zh_TW',
         //     collectible: 1,
         //     set: set
@@ -532,7 +547,7 @@ client.on('messageCreate', async message => {
         }
         // let resp = await hsClient.cardSearch({
         //     textFilter: text,
-        //     origin: 'tw',
+        //     origin: 'us',
         //     locale: 'zh_TW',
         //     collectible: 0,
         //     set: set,
@@ -544,7 +559,7 @@ client.on('messageCreate', async message => {
         // card_to_message(cards, message);
         filter = {
             textFilter: text,
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
             collectible: 0,
             set: set,
@@ -560,7 +575,7 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'battlegrounds',
             textFilter: text,
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
         });
         cards = resp.data.cards;
@@ -575,7 +590,7 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'mercenaries',
             textFilter: text,
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
         });
         cards = resp.data.cards;
@@ -589,7 +604,7 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'duels',
             textFilter: text,
-            origin: 'tw',
+            origin: 'us',
             locale: 'zh_TW',
             sort: 'classes:asc,manaCost:asc,attack:asc'
 
