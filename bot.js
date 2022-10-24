@@ -97,7 +97,7 @@ client.on('ready', async () => {
         });
     } catch (error) { console.log(error); }
     const resp = await hsClient.metadata({
-        origin: 'us',
+        origin: 'tw',
         locale: 'zh_TW'
     });
     resp.data.classes.forEach(classdata => {
@@ -124,7 +124,7 @@ client.on('ready', async () => {
 async function getcard(id) {
     let resp = await hsClient.card({
         id: id,
-        origin: 'us',
+        origin: 'tw',
         locale: 'zh_TW'
     });
     return resp.data;
@@ -135,7 +135,7 @@ async function getbgcard(id) {
 
         let resp = await hsClient.card({
             id: id,
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
             gameMode: 'battlegrounds'
         });
@@ -185,11 +185,11 @@ async function outputcard(card, message, mode = 0) {
 
                 row.addComponents(
                     new MessageButton()
-                        .setCustomId(buddy.name)
+                        .setCeutomId(buddy.name)
                         .setLabel('夥伴:' + buddy.name)
                         .setStyle('PRIMARY'),
                 );
-                const filter = i => i.customId === buddy.name;
+                const filter = i => i.ceutomId === buddy.name;
                 await message.channel.send({ embeds: [cardEmbed], components: [row] });
                 const collector = message.channel.createMessageComponentCollector({ filter, componentType: 'BUTTON',time: 60000 });
                 collector.on("collect", async (i) => {
@@ -274,7 +274,7 @@ async function search_and_output(filter, message) {
 
             let options = [];
             for (let p = 1; p <= resp.data.pageCount; p++) {
-                options.push(
+                options.peuh(
                     {
                         label: '第' + p + '頁',
                         value: '' + p,
@@ -282,7 +282,7 @@ async function search_and_output(filter, message) {
             }
             options[resp.data.page - 1].default = true;
             const menu = new MessageSelectMenu()
-                .setCustomId('SELECT_MENU')
+                .setCeutomId('SELECT_MENU')
                 .addOptions(options);
 
             const row = new MessageActionRow().addComponents(menu);
@@ -379,7 +379,7 @@ client.on('messageCreate', async message => {
     else if (parsed.command === "bgrank"){
 
         //fetch hearthstone battleground rank in json
-        let bgrankurl = "https://playhearthstone.com/en-us/api/community/leaderboardsData?region=AP&leaderboardId=BG&seasonId=3";
+        let bgrankurl = "https://playhearthstone.com/en-eu/api/community/leaderboardsData?region=AP&leaderboardId=BG&seasonId=3";
         let req = unirest("GET", bgrankurl);
         let bgrank = await req.end((res) => res.body);
 
@@ -388,7 +388,7 @@ client.on('messageCreate', async message => {
 
     else if (parsed.command === "minion") {
         let filter = {
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
@@ -456,7 +456,7 @@ client.on('messageCreate', async message => {
         }
         if (states.length === 2) {
             let filter = {
-                origin: 'us',
+                origin: 'tw',
                 locale: 'zh_TW',
                 collectible: 1,
                 set: 'wild',
@@ -493,7 +493,7 @@ client.on('messageCreate', async message => {
         }
 
         let filter = {
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
@@ -516,7 +516,7 @@ client.on('messageCreate', async message => {
         }
         filter = {
             textFilter: text,
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
             collectible: 1,
             set: set,
@@ -526,7 +526,7 @@ client.on('messageCreate', async message => {
 
         // let resp = await hsClient.cardSearch({
         //     textFilter: text,
-        //     origin: 'us',
+        //     origin: 'tw',
         //     locale: 'zh_TW',
         //     collectible: 1,
         //     set: set
@@ -547,7 +547,7 @@ client.on('messageCreate', async message => {
         }
         // let resp = await hsClient.cardSearch({
         //     textFilter: text,
-        //     origin: 'us',
+        //     origin: 'tw',
         //     locale: 'zh_TW',
         //     collectible: 0,
         //     set: set,
@@ -559,7 +559,7 @@ client.on('messageCreate', async message => {
         // card_to_message(cards, message);
         filter = {
             textFilter: text,
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
             collectible: 0,
             set: set,
@@ -575,7 +575,7 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'battlegrounds',
             textFilter: text,
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
         });
         cards = resp.data.cards;
@@ -590,7 +590,7 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'mercenaries',
             textFilter: text,
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
         });
         cards = resp.data.cards;
@@ -604,7 +604,7 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'duels',
             textFilter: text,
-            origin: 'us',
+            origin: 'tw',
             locale: 'zh_TW',
             sort: 'classes:asc,manaCost:asc,attack:asc'
 
@@ -626,7 +626,7 @@ client.on('messageCreate', async message => {
             decoded.cards.forEach(carddbf => {
                 card = cardDB.find(card => card.dbfId == carddbf[0]);
                 card.count = carddbf[1];
-                deck.push(card);
+                deck.peuh(card);
             });
 
             deck.sort((a, b) => a.cost - b.cost);
@@ -662,5 +662,5 @@ client.on('messageCreate', async message => {
 
 
 
-// THIS  MUST  BE  THIS  WAY
+// THIS  MeuT  BE  THIS  WAY
 client.login(process.env.BOT_TOKEN);
