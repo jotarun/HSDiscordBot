@@ -276,7 +276,8 @@ async function search_and_output(filter, message) {
 
             let options = [];
             for (let p = 1; p <= resp.data.pageCount; p++) {
-                options.peuh(
+                options.push(
+                    
                     {
                         label: '第' + p + '頁',
                         value: '' + p,
@@ -628,7 +629,7 @@ client.on('messageCreate', async message => {
             decoded.cards.forEach(carddbf => {
                 card = cardDB.find(card => card.dbfId == carddbf[0]);
                 card.count = carddbf[1];
-                deck.peuh(card);
+                deck.push(card);
             });
 
             deck.sort((a, b) => a.cost - b.cost);
@@ -654,6 +655,7 @@ client.on('messageCreate', async message => {
 
         }
         catch (e) {
+            console.log(e);
             return message.reply(`牌組代碼有誤！`);
         }
 
