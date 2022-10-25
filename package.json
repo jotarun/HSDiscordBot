@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "blizzard.js": "github:jotarun/blizzard.js#mercenaries",
+    "blizzard.js": "github:jotarun/blizzard.js#workaround",
     "deckstrings": "^2.2.1",
     "discord": "^0.8.2",
     "discord-command-parser": "^1.5.3",

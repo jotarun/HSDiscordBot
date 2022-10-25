@@ -93,12 +93,14 @@ client.on('ready', async () => {
     try {
         hsClient = await blizzard.hs.createInstance({
             key: process.env.BLIZZARD_CLIENT_ID,
-            secret: process.env.BLIZZARD_CLIENT_SECRET
+            secret: process.env.BLIZZARD_CLIENT_SECRET,
+            origin: 'us',
+            locale: 'zh_TW'
         });
     } catch (error) { console.log(error); }
     const resp = await hsClient.metadata({
-        origin: 'tw',
-        locale: 'zh_TW'
+        //origin: 'tw',
+        //locale: 'zh_TW'
     });
     resp.data.classes.forEach(classdata => {
         classIDs.set(classdata.id, classdata.name);
@@ -124,8 +126,8 @@ client.on('ready', async () => {
 async function getcard(id) {
     let resp = await hsClient.card({
         id: id,
-        origin: 'tw',
-        locale: 'zh_TW'
+        //origin: 'tw',
+        //locale: 'zh_TW'
     });
     return resp.data;
 }
@@ -135,8 +137,8 @@ async function getbgcard(id) {
 
         let resp = await hsClient.card({
             id: id,
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
             gameMode: 'battlegrounds'
         });
         return resp.data;
@@ -388,8 +390,8 @@ client.on('messageCreate', async message => {
 
     else if (parsed.command === "minion") {
         let filter = {
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
             type: 'minion',
@@ -456,8 +458,8 @@ client.on('messageCreate', async message => {
         }
         if (states.length === 2) {
             let filter = {
-                origin: 'tw',
-                locale: 'zh_TW',
+                //origin: 'tw',
+                //locale: 'zh_TW',
                 collectible: 1,
                 set: 'wild',
                 manaCost: states[0],
@@ -493,8 +495,8 @@ client.on('messageCreate', async message => {
         }
 
         let filter = {
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
             collectible: 1,
             set: 'wild',
             manaCost: states,
@@ -516,8 +518,8 @@ client.on('messageCreate', async message => {
         }
         filter = {
             textFilter: text,
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
             collectible: 1,
             set: set,
             sort: 'classes:asc,manaCost:asc,attack:asc'
@@ -526,8 +528,8 @@ client.on('messageCreate', async message => {
 
         // let resp = await hsClient.cardSearch({
         //     textFilter: text,
-        //     origin: 'tw',
-        //     locale: 'zh_TW',
+        //     //origin: 'tw',
+        //     //locale: 'zh_TW',
         //     collectible: 1,
         //     set: set
 
@@ -547,8 +549,8 @@ client.on('messageCreate', async message => {
         }
         // let resp = await hsClient.cardSearch({
         //     textFilter: text,
-        //     origin: 'tw',
-        //     locale: 'zh_TW',
+        //     //origin: 'tw',
+        //     //locale: 'zh_TW',
         //     collectible: 0,
         //     set: set,
         //     sort: 'classes:asc,manaCost:asc,attack:asc'
@@ -559,8 +561,8 @@ client.on('messageCreate', async message => {
         // card_to_message(cards, message);
         filter = {
             textFilter: text,
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
             collectible: 0,
             set: set,
             sort: 'classes:asc,manaCost:asc,attack:asc'
@@ -575,8 +577,8 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'battlegrounds',
             textFilter: text,
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
@@ -590,8 +592,8 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'mercenaries',
             textFilter: text,
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
         });
         cards = resp.data.cards;
         cards = cards.filter(card => card.name.includes(text));
@@ -604,8 +606,8 @@ client.on('messageCreate', async message => {
         let resp = await hsClient.cardSearch({
             gameMode: 'duels',
             textFilter: text,
-            origin: 'tw',
-            locale: 'zh_TW',
+            //origin: 'tw',
+            //locale: 'zh_TW',
             sort: 'classes:asc,manaCost:asc,attack:asc'
 
         });
