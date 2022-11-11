@@ -87,7 +87,7 @@ async function  test()
         });
     } catch (error) { console.log(error); }
     const resp = await hsClient.metadata({
-        origin: 'tw',
+        origin: 'us',
         locale: 'zh_TW'
     });
     
@@ -113,7 +113,7 @@ async function  test()
         rarityIDs.set(setdata.id, setdata.name);
     });
 
-    meta.data.classes.forEach(async setdata => {
+    // meta.data.classes.forEach(async setdata => {
 
 
     // cardnames.forEach(async cardname =>{
@@ -121,15 +121,17 @@ async function  test()
     origin: 'tw',
     locale: 'zh_TW',
     collectible: 1,
-    set: 'murder-at-castle-nathria',
-    class:setdata.slug,
+    // set: 'march-of-the-lich-king',
+    set:'standard',
+    // class:setdata.slug,
+    class:'deathknight',
     sort:'dateadded:desc'
     });
     cards = result.data.cards;
 
     console.log ('\n=============');
 
-    console.log (setdata.name);
+    // console.log (setdata.name);
 
     console.log ('=============\n');
 
@@ -164,17 +166,23 @@ async function  test()
         else {
             state = `${card.manaCost}/${card.health} ${rarity} 地點`
         }
+        if (typeof card.runeCost != "undefined")  
+        {
+            if (card.runeCost.blood >0) state += " 血魄符文: " + card.runeCost.blood;
+            if (card.runeCost.frost >0) state += " 冰霜符文: " + card.runeCost.frost;
+            if (card.runeCost.unholy >0) state += " 穢邪符文: " + card.runeCost.unholy;
+        }
         let cardclass = classIDs.get(card.classId);
-        // console.log (`${cardclass} [${card.name}]`);
-        console.log (`${state} ${type} [${card.name}]`);
-        // console.log (`${state} ${type}`);
-        // console.log (card.text.replace(/<[^>]+>/g, ''));
-        console.log (card.flavorText.replace(/<[^>]+>/g, ''));
+        console.log (`${cardclass} [${card.name}]`);
+        // console.log (`${state} ${type} [${card.name}]`);
+        console.log (`${state} ${type}`);
+        console.log (card.text.replace(/<[^>]+>/g, ''));
+        // console.log (card.flavorText.replace(/<[^>]+>/g, ''));
         console.log ('');
 
     });
     
-    });
+    // });
   
 }
 

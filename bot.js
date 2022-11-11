@@ -217,8 +217,8 @@ async function outputcard(card, message, mode = 0) {
             cardEmbed.setImage(card.image);
             setName = setIDs.get(card.cardSetId);
             if (typeof setName !== 'undefined' && setName !== null) {
-                // do stuff
-                cardEmbed.setFooter({ text: setIDs.get(card.cardSetId)});
+                // do stuff                
+                cardEmbed.setFooter(setName);
             }
             await message.channel.send({ embeds: [cardEmbed] });
         }
@@ -285,7 +285,7 @@ async function search_and_output(filter, message) {
             }
             options[resp.data.page - 1].default = true;
             const menu = new MessageSelectMenu()
-                .setCeutomId('SELECT_MENU')
+                .setCustomId('SELECT_MENU')
                 .addOptions(options);
 
             const row = new MessageActionRow().addComponents(menu);
